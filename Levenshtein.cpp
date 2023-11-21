@@ -6,6 +6,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <stdlib.h>
+#include <numeric>
+#include <algorithm>
 using namespace std;
 using namespace std::chrono;
 
@@ -38,6 +41,7 @@ public:
 class LevTrie  {
 public:
     Node* head;
+
     LevTrie () {
         head = new Node();
     }
@@ -51,29 +55,45 @@ public:
         aux->isEnd = true;
     }
 
-    void constructLev(string word, int distance){
-        queue<pair<Node*, pair<int, int>>> lista; // cur node, cur index, cur lev distance
-        lista.push({head, {0, 0}});
+    vector<string> search(string word, int maxD){
+        vector<int> curRow(word.size() + 1);
+        iota (begin(curRow), end(curRow), 0);
+        vector<string> ans;
 
-        while(!lista.empty()){
-            auto cur_p_pair = lista.front();
-            Node* cur = cur_p_pair.first;
-            auto index_dist_pair = cur_p_pair.second;
-            int index = index_dist_pair.first;
-            int dist = index_dist_pair.second;
-            lista.pop();
+        for(auto val: head->edges){
+            searchRecursive(val.second, val.first, string(1, val.first), word, curRow, ans, maxD);
+        }
 
-            cur->isValid = false;
-            if(index == word.size()){
-                cur->isValid = cur->isEnd; // if end of word and isEnd => valid lev distance
-                continue;
+        return ans;
+    }
+
+    void searchRecursive(Node* cur, char letter, string curWord, string& word, vector<int> prevRow, vector<string>& ans, int maxD){
+        if(ans.size() > 10)
+            return;
+        vector<int> curRow(word.size() + 1);
+        curRow[0] = prevRow[0] + 1;
+
+        for(int i = 1; i <= word.size(); i++){
+            int insertCost = curRow[i - 1] + 1;
+            int deleteCost = prevRow[i] + 1;
+            int replaceCost;
+
+            if(word[i - 1] != letter){
+                replaceCost = prevRow[i - 1] + 1;                
+            }
+            else{
+                replaceCost = prevRow[i - 1];
             }
 
+            curRow[i] = min(insertCost, min(deleteCost, replaceCost));
+        }
+
+        if(curRow.back() <= maxD && cur->isEnd)
+            ans.push_back(curWord);
+
+        if(*min_element(curRow.begin(), curRow.end()) <= maxD){
             for(auto val: cur->edges){
-                if(val.first == word[index])
-                    lista.push({val.second, {index + 1, dist}});
-                else if(dist < distance)
-                    lista.push({val.second, {index + 1, dist + 1}});
+                searchRecursive(val.second, val.first, curWord + val.first, word, curRow, ans, maxD);
             }
         }
     }
@@ -83,29 +103,6 @@ public:
             cur = head;
         Node* next = cur->find(c);
         return next;
-    }
-
-    vector<string> next3Words(Node* cur) {
-        if (cur == nullptr)
-            return {};
-        queue<pair<Node*, string>> lista;
-        lista.push({cur, ""});
-        vector<string> ans;
-
-        while (!lista.empty()) {
-            Node* curNode = lista.front().first;
-            string curWord = lista.front().second;
-            lista.pop();
-            if (curNode->isValid) {
-                ans.push_back(curWord);
-                if (ans.size() == 10)
-                    return ans;
-            }
-
-            for (auto it : curNode->edges)
-                lista.push({it.second, curWord + it.first});
-        }
-        return ans;
     }
 
     int countNodes(){
@@ -130,15 +127,9 @@ public:
 
     Input(LevTrie& trie) : trie(trie) {}
 
-    void addLevWord(string s){
-        trie.constructLev(s, 1);
-    }
-
     vector<string> handleInput(char c) {
         word.push_back(c);
-        addLevWord(word);
-        Node* aux = trie.head;
-        return trie.next3Words(aux);
+        return trie.search(word, 1);
     }
 };
 
@@ -171,11 +162,11 @@ int main() {
     int t;
     cout << endl << "Digite quantas letras quer" << endl;
     cin >> t;
+    cout << endl << "Digite as letras: " << endl << endl;
 
     while (t--) {
         char c;
         cin >> c;
-        cout << c << endl;
 
         start = high_resolution_clock::now();
         vector<string> suggestedWords = input.handleInput(c);
@@ -184,7 +175,7 @@ int main() {
         auto durationInside = duration_cast<microseconds>(stop - start);
         cout << "Time taken for handleInput: " << durationInside.count() << " microseconds" << endl;
 
-        cout << "Lev Words: ";
+        cout << "Lev Words for word '" << input.word << "': ";
         for (auto& word : suggestedWords)
             cout << word << " ";
         cout << endl << endl;
