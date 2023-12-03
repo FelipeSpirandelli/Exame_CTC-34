@@ -15,7 +15,6 @@ using namespace std::chrono;
 class Node {
 public:
     bool isEnd;
-    bool isValid;
     unordered_map<char, Node*> edges;
 
     Node() {
@@ -55,6 +54,8 @@ public:
         aux->isEnd = true;
     }
 
+
+    // TODO - SAVE THE PAST COMPUTATIONS SO THAT WE DONT HAVE TO REDO SEARCH FROM HEAD
     vector<string> search(string word, int maxD){
         vector<int> curRow(word.size() + 1);
         iota (begin(curRow), end(curRow), 0);

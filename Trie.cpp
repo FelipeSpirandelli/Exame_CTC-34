@@ -127,6 +127,7 @@ int main() {
 
     string line;
     ifstream file("/usr/share/dict/american-english");
+    // ifstream file("./test.txt");
 
     auto start = high_resolution_clock::now();
 
