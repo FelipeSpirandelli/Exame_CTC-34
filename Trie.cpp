@@ -14,12 +14,10 @@ public:
     bool isEnd;
     unordered_map<char, Node*> edges;
 
-    Node() {
-        isEnd = false;
-    }
+    Node() { isEnd = false; }
 
     Node* find(char c) {
-        auto it = edges.find(c);
+        unordered_map<char, Node*>::iterator it = edges.find(c);
         if (it != edges.end())
             return it->second;
 
@@ -37,13 +35,11 @@ public:
 class Trie {
 public:
     Node* head;
-    Trie() {
-        head = new Node();
-    }
+    Trie() { head = new Node(); }
 
     void addWord(string word) {
         Node* aux = head;
-        for (auto c : word) {
+        for (char c : word) {
             Node* next = aux->findOrInclude(c);
             aux = next;
         }
@@ -51,31 +47,32 @@ public:
     }
 
     Node* nextNode(Node* cur, char c) {
-        if (!cur)
-            cur = head;
+        if (!cur) cur = head;
+
         Node* next = cur->find(c);
         return next;
     }
 
     vector<string> next3Words(Node* cur, string word) {
-        if (cur == nullptr)
+        if (cur == nullptr) 
             return {};
-        queue<pair<Node*, string>> lista;
-        lista.push({cur, word});
+
+        queue<pair<Node*, string>> words;
+        words.push({cur, word});
         vector<string> ans;
 
-        while (!lista.empty()) {
-            Node* curNode = lista.front().first;
-            string curWord = lista.front().second;
-            lista.pop();
+        while (!words.empty()) {
+            Node* curNode = words.front().first;
+            string curWord = words.front().second;
+            words.pop();
             if (curNode->isEnd) {
                 ans.push_back(curWord);
                 if (ans.size() == 3)
                     return ans;
             }
 
-            for (auto it : curNode->edges)
-                lista.push({it.second, curWord + it.first});
+            for (pair<const char, Node *> it : curNode->edges)
+                words.push({it.second, curWord + it.first});
         }
         return ans;
     }
@@ -84,11 +81,12 @@ public:
         int count = 0;
         queue<Node*> next;
         next.push(head);
-        while(!next.empty()){
+
+        while(!next.empty()) {
             Node* curNode = next.front();
             next.pop();
             count++;
-            for (auto it : curNode->edges)
+            for (pair<const char, Node *> it : curNode->edges)
                 next.push(it.second);
         }
         return count;
@@ -129,7 +127,7 @@ int main() {
     ifstream file("/usr/share/dict/american-english");
     // ifstream file("./test.txt");
 
-    auto start = high_resolution_clock::now();
+    time_point start = high_resolution_clock::now();
 
     if (file.is_open()) {
         while (getline(file, line)) {
@@ -141,7 +139,7 @@ int main() {
         return 1;
     }
 
-    auto stop = high_resolution_clock::now();
+    time_point stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     cout << "Time taken to insert words: " << duration.count() << " miliseconds" << endl;
 
@@ -149,7 +147,7 @@ int main() {
     cout << "Number of nodes: " << nNodes << endl << "Memory: " << ((double) nNodes * sizeof(Node) / 1048576.0)<< " MB" << endl;
 
     int t;
-    cout << endl << "Digite quantas letras quer" << endl;
+    cout << endl << "How many letters has the word?" << endl;
     cin >> t;
 
     while (t--) {
@@ -164,7 +162,7 @@ int main() {
         auto durationInside = duration_cast<microseconds>(stop - start);
         cout << "Time taken for handleInput: " << durationInside.count() << " microseconds" << endl;
 
-        for (auto& word : suggestedWords)
+        for (std::basic_string<char>& word : suggestedWords)
             cout << word << " ";
         cout << endl;
     }

@@ -22,7 +22,7 @@ public:
     }
 
     Node* find(char c) {
-        auto it = edges.find(c);
+        unordered_map<char, Node*>::iterator it = edges.find(c);
         if (it != edges.end())
             return it->second;
 
@@ -41,19 +41,16 @@ class LevTrie  {
 public:
     Node* head;
 
-    LevTrie () {
-        head = new Node();
-    }
+    LevTrie () { head = new Node(); }
 
     void addWord(string word) {
         Node* aux = head;
-        for (auto c : word) {
+        for (char c : word) {
             Node* next = aux->findOrInclude(c);
             aux = next;
         }
         aux->isEnd = true;
     }
-
 
     // TODO - SAVE THE PAST COMPUTATIONS SO THAT WE DONT HAVE TO REDO SEARCH FROM HEAD
     vector<string> search(string word, int maxD){
@@ -114,7 +111,7 @@ public:
             Node* curNode = next.front();
             next.pop();
             count++;
-            for (auto it : curNode->edges)
+            for (pair<const char, Node *> it : curNode->edges)
                 next.push(it.second);
         }
         return count;
@@ -141,7 +138,7 @@ int main() {
     string line;
     ifstream file("/usr/share/dict/american-english");
 
-    auto start = high_resolution_clock::now();
+    time_point start = high_resolution_clock::now();
 
     if (file.is_open()) {
         while (getline(file, line)) {
@@ -153,7 +150,7 @@ int main() {
         return 1;
     }
 
-    auto stop = high_resolution_clock::now();
+    time_point stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     cout << "Time taken to insert words: " << duration.count() << " miliseconds" << endl;
 
@@ -161,7 +158,7 @@ int main() {
     cout << "Number of nodes: " << nNodes << endl << "Memory: " << ((double) nNodes * sizeof(Node) / 1048576.0)<< " MB" << endl;
 
     int t;
-    cout << endl << "Digite quantas letras quer" << endl;
+    cout << endl << "How many letters has the word?" << endl;
     cin >> t;
     cout << endl << "Digite as letras: " << endl << endl;
 
@@ -177,7 +174,7 @@ int main() {
         cout << "Time taken for handleInput: " << durationInside.count() << " microseconds" << endl;
 
         cout << "Lev Words for word '" << input.word << "': ";
-        for (auto& word : suggestedWords)
+        for (basic_string<char> &word : suggestedWords)
             cout << word << " ";
         cout << endl << endl;
     }
