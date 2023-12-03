@@ -153,6 +153,9 @@ int main() {
     int nNodes = trie.countNodes();
     cout << "Number of nodes: " << nNodes << endl << "Memory: " << ((double) nNodes * sizeof(Node) / 1048576.0)<< " MB" << endl;
 
+    cout << "Press any key to start" << endl;
+    char key = getch();
+
     string input_word = "";
     char input_letter = 0;
 
