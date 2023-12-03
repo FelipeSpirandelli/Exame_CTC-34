@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <queue>
@@ -6,6 +7,11 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <conio.h>
+
+#define BACKSPACE 8
+#define DELETE 127
+
 using namespace std;
 using namespace std::chrono;
 
@@ -47,14 +53,15 @@ public:
     }
 
     Node* nextNode(Node* cur, char c) {
-        if (!cur) cur = head;
+        if (!cur)
+            cur = head;
 
         Node* next = cur->find(c);
         return next;
     }
 
     vector<string> next3Words(Node* cur, string word) {
-        if (cur == nullptr) 
+        if (cur == nullptr)
             return {};
 
         queue<pair<Node*, string>> words;
@@ -102,7 +109,7 @@ public:
     Input(Trie& trie) : trie(trie) {}
 
     vector<string> handleInput(char c) {
-        if (c == 8) { // backspace
+        if (c == BACKSPACE || c == DELETE) {
             if (!nodes.empty()) {
                 nodes.pop();
                 word.pop_back();
@@ -120,8 +127,8 @@ public:
 };
 
 int main() {
-    Trie test;
-    Input input(test);
+    Trie trie;
+    Input input(trie);
 
     string line;
     ifstream file("/usr/share/dict/american-english");
@@ -131,7 +138,7 @@ int main() {
 
     if (file.is_open()) {
         while (getline(file, line)) {
-            test.addWord(line);
+            trie.addWord(line);
         }
         file.close();
     } else {
@@ -143,28 +150,37 @@ int main() {
     auto duration = duration_cast<milliseconds>(stop - start);
     cout << "Time taken to insert words: " << duration.count() << " miliseconds" << endl;
 
-    int nNodes = test.countNodes();
+    int nNodes = trie.countNodes();
     cout << "Number of nodes: " << nNodes << endl << "Memory: " << ((double) nNodes * sizeof(Node) / 1048576.0)<< " MB" << endl;
 
-    int t;
-    cout << endl << "How many letters has the word?" << endl;
-    cin >> t;
+    string input_word = "";
+    char input_letter = 0;
 
-    while (t--) {
-        char c;
-        cin >> c;
-        cout << c << endl;
+    while (input_letter != '\n') {
+        system("clear");
 
         start = high_resolution_clock::now();
-        vector<string> suggestedWords = input.handleInput(c);
+        vector<string> suggestedWords = input.handleInput(input_letter);
         stop = high_resolution_clock::now();
 
-        auto durationInside = duration_cast<microseconds>(stop - start);
-        cout << "Time taken for handleInput: " << durationInside.count() << " microseconds" << endl;
+        if (!input_word.empty() && (input_letter == BACKSPACE || input_letter == DELETE))
+            input_word.pop_back();
+        else
+            input_word.push_back(input_letter);
 
-        for (std::basic_string<char>& word : suggestedWords)
-            cout << word << " ";
-        cout << endl;
+        cout << "Input: " << input_word << endl << endl;
+
+        if (input_letter != 0) {
+            auto durationInside = duration_cast<microseconds>(stop - start);
+            cout << "Time taken for handleInput: " << durationInside.count() << " microseconds" << endl << endl;
+
+            cout << "Avaliable words:" << endl;
+            for (std::basic_string<char>& word : suggestedWords)
+                cout << word << " ";
+            cout << endl << endl;
+        }
+
+        input_letter = getch();
     }
 
     return 0;

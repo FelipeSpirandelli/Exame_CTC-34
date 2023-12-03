@@ -9,6 +9,11 @@
 #include <stdlib.h>
 #include <numeric>
 #include <algorithm>
+#include <conio.h>
+
+#define BACKSPACE 8
+#define DELETE 127
+
 using namespace std;
 using namespace std::chrono;
 
@@ -132,8 +137,8 @@ public:
 };
 
 int main() {
-    LevTrie test;
-    Input input(test);
+    LevTrie lev;
+    Input input(lev);
 
     string line;
     ifstream file("/usr/share/dict/american-english");
@@ -142,7 +147,7 @@ int main() {
 
     if (file.is_open()) {
         while (getline(file, line)) {
-            test.addWord(line);
+            lev.addWord(line);
         }
         file.close();
     } else {
@@ -154,29 +159,37 @@ int main() {
     auto duration = duration_cast<milliseconds>(stop - start);
     cout << "Time taken to insert words: " << duration.count() << " miliseconds" << endl;
 
-    int nNodes = test.countNodes();
+    int nNodes = lev.countNodes();
     cout << "Number of nodes: " << nNodes << endl << "Memory: " << ((double) nNodes * sizeof(Node) / 1048576.0)<< " MB" << endl;
 
-    int t;
-    cout << endl << "How many letters has the word?" << endl;
-    cin >> t;
-    cout << endl << "Digite as letras: " << endl << endl;
+    string input_word = "";
+    char input_letter = 0;
 
-    while (t--) {
-        char c;
-        cin >> c;
+    while (input_letter != '\n') {
+        system("clear");
 
         start = high_resolution_clock::now();
-        vector<string> suggestedWords = input.handleInput(c);
+        vector<string> suggestedWords = input.handleInput(input_letter);
         stop = high_resolution_clock::now();
 
-        auto durationInside = duration_cast<microseconds>(stop - start);
-        cout << "Time taken for handleInput: " << durationInside.count() << " microseconds" << endl;
+        if (!input_word.empty() && (input_letter == BACKSPACE || input_letter == DELETE))
+            input_word.pop_back();
+        else
+            input_word.push_back(input_letter);
 
-        cout << "Lev Words for word '" << input.word << "': ";
-        for (basic_string<char> &word : suggestedWords)
-            cout << word << " ";
-        cout << endl << endl;
+        cout << "Input: " << input_word << endl << endl;
+
+        if (input_letter != 0) {
+            auto durationInside = duration_cast<microseconds>(stop - start);
+            cout << "Time taken for handleInput: " << durationInside.count() << " microseconds" << endl << endl;
+
+            cout << "Avaliable words:" << endl;
+            for (std::basic_string<char>& word : suggestedWords)
+                cout << word << " ";
+            cout << endl << endl;
+        }
+
+        input_letter = getch();
     }
 
     return 0;
