@@ -154,11 +154,9 @@ int main() {
     cout << "Number of nodes: " << nNodes << endl << "Memory: " << ((double) nNodes * sizeof(Node) / 1048576.0)<< " MB" << endl;
 
     cout << "Press any key to start" << endl;
-    char key = getch();
+    getch();
 
-    string input_word = "";
     char input_letter = 0;
-
     while (input_letter != '\n') {
         system("clear");
 
@@ -166,21 +164,15 @@ int main() {
         vector<string> suggestedWords = input.handleInput(input_letter);
         stop = high_resolution_clock::now();
 
-        if (!input_word.empty() && (input_letter == BACKSPACE || input_letter == DELETE))
-            input_word.pop_back();
-        else
-            input_word.push_back(input_letter);
-
-        cout << "Input: " << input_word << endl << endl;
+        cout << u8"\u2192 " << input.word << endl;
 
         if (input_letter != 0) {
-            auto durationInside = duration_cast<microseconds>(stop - start);
-            cout << "Time taken for handleInput: " << durationInside.count() << " microseconds" << endl << endl;
-
-            cout << "Avaliable words:" << endl;
+            // cout << "Avaliable words:" << endl;
             for (std::basic_string<char>& word : suggestedWords)
-                cout << word << " ";
-            cout << endl << endl;
+                cout << "  " << word << endl;
+
+            auto durationInside = duration_cast<microseconds>(stop - start);
+            cout << endl <<  "Time taken for handleInput: " << durationInside.count() << " microseconds";
         }
 
         input_letter = getch();
