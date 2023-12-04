@@ -1,6 +1,7 @@
 #include <chrono>
 #include <fstream>
 #include <queue>
+#include <stack>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -94,47 +95,81 @@ Node* findMinimized(Node* cur, unordered_set<Node*, hash<Node*>, NodePtrEqual>& 
     return cur;
 }
 
+class Fst {
+public:
+    Node* head;
+    Fst(Node* initial) { head = initial; }
 
-vector<string> next3Words(Node* cur, unordered_set<Node*, hash<Node*>, NodePtrEqual> &dictionary, string word) {
-    queue<pair<Node*, string>> words;
-    words.push({cur, word});
-    vector<string> ans;
+    Node* nextNode(Node* cur, char c) {
+        if (!cur)
+            cur = head;
 
-    while (!words.empty()) {
-        Node* curNode = words.front().first;
-        string curWord = words.front().second;
-        words.pop();
-        if (curNode->isEnd) {
-            ans.push_back(curWord);
-            if (ans.size() == 5)
-                    return ans;
-        }
-
-        auto newNode = findMinimized(curNode, dictionary);
-        for (pair<const char, Node *> it : curNode->edges)
-            words.push({it.second, curWord + it.first});
+        Node* next = cur->find(c);
+        return next;
     }
 
-    return ans;
-}
+    vector<string> next3Words(Node* cur, string word) {
+        if (cur == nullptr)
+            return {};
+
+        queue<pair<Node*, string>> words;
+        words.push({cur, word});
+        vector<string> ans;
+
+        while (!words.empty()) {
+            Node* curNode = words.front().first;
+            string curWord = words.front().second;
+            words.pop();
+            if (curNode->isEnd) {
+                ans.push_back(curWord);
+                if (ans.size() == 3)
+                    return ans;
+            }
+
+            for (pair<const char, Node *> it : curNode->edges)
+                words.push({it.second, curWord + it.first});
+        }
+        return ans;
+    }
+};
 
 class Input {
 public:
     string word;
-    unordered_set<Node*, hash<Node*>, NodePtrEqual> dictionary;
+    Fst& fst;
+    stack<Node*> nodes;
 
-    Input(unordered_set<Node*, hash<Node*>, NodePtrEqual> &dictionary) : dictionary(dictionary) {}
+    Input(Fst& fst) : fst(fst) {}
 
-    vector<string> handleInput(Node* cur, char c) {
+    vector<string> handleInput(char c) {
         if (c == BACKSPACE || c == DELETE) {
-            if (!word.empty())
+            if (!nodes.empty()) {
+                nodes.pop();
                 word.pop_back();
-
-            if (!word.empty())
-                return next3Words(cur, dictionary, word);
+            }
+            if (!nodes.empty())
+                return fst.next3Words(nodes.top(), word);
         } else {
+            // if (c == TAB && !word.empty()) {
+            //     Node* next = (nodes.empty()) ? trie.head : nodes.top();
+            //     vector<string> words = trie.next3Words(nodes.top(), word);
+
+            //     if (word == words[0])
+            //         return words;
+
+            //     string next_word = words[0];
+            //     for (int i = next_word.length() - word.length() - 1; i < next_word.length(); i++)
+            //         nodes.push(trie.nextNode(next, next_word[i]));
+
+            //     word = next_word;
+
+            //     return trie.next3Words(nodes.top(), word);
+            // }
+
+            Node* next = (nodes.empty()) ? fst.head : nodes.top();
+            nodes.push(fst.nextNode(next, c));
             word.push_back(c);
-            return next3Words(cur, dictionary, word);
+            return fst.next3Words(nodes.top(), word);
         }
         return {};
     }
@@ -208,15 +243,15 @@ int main(){
     cout << "Press any key to start" << endl;
     getch();
 
-    Input input(dictionary);
+    Fst fst(findMinimized(tempStates[0], dictionary));
+    Input input(fst);
     char input_letter = 0;
-    Node* initial = findMinimized(tempStates[0], dictionary);
 
     while (input_letter != '\n') {
         system("clear");
 
         start = high_resolution_clock::now();
-        vector<string> suggestedWords = input.handleInput(initial, input_letter);
+        vector<string> suggestedWords = input.handleInput(input_letter);
         stop = high_resolution_clock::now();
 
         cout << u8"\u2192 " << input.word << endl;
