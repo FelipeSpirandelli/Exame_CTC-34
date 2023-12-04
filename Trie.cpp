@@ -10,6 +10,7 @@
 #include <conio.h>
 
 #define BACKSPACE 8
+#define TAB 9
 #define DELETE 127
 
 using namespace std;
@@ -117,6 +118,22 @@ public:
             if (!nodes.empty())
                 return trie.next3Words(nodes.top(), word);
         } else {
+            // if (c == TAB && !word.empty()) {
+            //     Node* next = (nodes.empty()) ? trie.head : nodes.top();
+            //     vector<string> words = trie.next3Words(nodes.top(), word);
+
+            //     if (word == words[0])
+            //         return words;
+
+            //     string next_word = words[0];
+            //     for (int i = next_word.length() - word.length() - 1; i < next_word.length(); i++)
+            //         nodes.push(trie.nextNode(next, next_word[i]));
+
+            //     word = next_word;
+
+            //     return trie.next3Words(nodes.top(), word);
+            // }
+
             Node* next = (nodes.empty()) ? trie.head : nodes.top();
             nodes.push(trie.nextNode(next, c));
             word.push_back(c);
