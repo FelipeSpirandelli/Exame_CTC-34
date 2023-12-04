@@ -11,6 +11,8 @@
 #include <conio.h>
 
 #define BACKSPACE 8
+#define TAB 9
+#define ESCAPE 27
 #define DELETE 127
 
 using namespace std;
@@ -120,7 +122,7 @@ public:
             Node* curNode = words.front().first;
             string curWord = words.front().second;
             words.pop();
-            if (curNode->isEnd) {
+            if (curNode->isEnd && curWord != word) {
                 ans.push_back(curWord);
                 if (ans.size() == 3)
                     return ans;
@@ -150,21 +152,20 @@ public:
             if (!nodes.empty())
                 return fst.next3Words(nodes.top(), word);
         } else {
-            // if (c == TAB && !word.empty()) {
-            //     Node* next = (nodes.empty()) ? trie.head : nodes.top();
-            //     vector<string> words = trie.next3Words(nodes.top(), word);
+            if (c == TAB && !word.empty()) {
+                vector<string> words = fst.next3Words(nodes.top(), word);
 
-            //     if (word == words[0])
-            //         return words;
+                if (words.size() == 0)
+                    return {};
 
-            //     string next_word = words[0];
-            //     for (int i = next_word.length() - word.length() - 1; i < next_word.length(); i++)
-            //         nodes.push(trie.nextNode(next, next_word[i]));
 
-            //     word = next_word;
+                string next_word = words[0];
+                for (int i = word.length(); i < next_word.length(); i++)
+                    nodes.push(fst.nextNode(nodes.top(), next_word[i]));
+                word = next_word;
 
-            //     return trie.next3Words(nodes.top(), word);
-            // }
+                return fst.next3Words(nodes.top(), word);
+            }
 
             Node* next = (nodes.empty()) ? fst.head : nodes.top();
             nodes.push(fst.nextNode(next, c));
@@ -203,7 +204,7 @@ int main(){
     }
     sort(all_words.begin(), all_words.end());
 
-    auto start = high_resolution_clock::now();
+    time_point start = high_resolution_clock::now();
 
     for(string curWord: all_words){
         // get prefix size
@@ -234,7 +235,7 @@ int main(){
         tempStates[i - 1]->setTransition(prevWord[i], findMinimized(tempStates[i], dictionary));
     }
 
-    auto stop = high_resolution_clock::now();
+    time_point stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
 
     double memory = ((double) dictionary.size() * sizeof(Node) / 1048576.0);
@@ -247,7 +248,7 @@ int main(){
     Input input(fst);
     char input_letter = 0;
 
-    while (input_letter != '\n') {
+    while (input_letter != ESCAPE) {
         system("clear");
 
         start = high_resolution_clock::now();
