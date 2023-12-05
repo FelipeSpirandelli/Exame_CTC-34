@@ -41,8 +41,8 @@ public:
     }
 
     vector<int> start() {
-        vector<int> curRow(1 + targetWord.length());
-        for (int i = 0; i <= targetWord.length(); i++){ //Initial row (empty input)
+        vector<int> curRow(1 + targetWord.size());
+        for (int i = 0; i <= targetWord.size(); i++){ //Initial row (empty input)
             curRow[i] = i;
         }
         return curRow;
@@ -50,27 +50,28 @@ public:
 
     vector<int> NextState(char c, vector<int>& state){
         int i, cost;
-        vector<int> newRow = state;
-        newRow[0]++;
+        vector<int> newRow(state.size());
+        newRow[0] = state[0] + 1;
         
         //change for the dfa
         if (newRow[0] > max_edits) newRow[0] = max_edits + 1;
 
-        for (i = 1; i <= targetWord.length(); i++) {
+        for (i = 1; i <= state.size(); i++) {
             cost = (c == targetWord[i-1]) ? 0 : 1 ;
             newRow[i] = min(1 + newRow[i-1], min(1 + state[i], cost + state[i-1]));
             //change the new row to implement DFA
             if (newRow[i] > max_edits) newRow[i] = max_edits + 1;
         }
+
         return newRow;
     }
     
     bool IsMatch(vector<int>& state) {
-        return (state[targetWord.length()] <= max_edits);
+        return (state.back() <= max_edits);
     }
 
     bool CanMatch(vector<int>& state) {
-        return (*min_element(state.begin(),state.end()) <= max_edits);
+        return (*min_element(state.begin(), state.end()) <= max_edits);
     }
 
     void PrintRow(vector<int>& state) {
@@ -82,13 +83,12 @@ public:
 
     unordered_set<char> StateTransitions(vector<int>& state) {
         unordered_set<char> trans;
-        for (int i = 0; i < targetWord.length(); i++){
-            if (state[i + 1] <= max_edits){
+        for (int i = 0; i < targetWord.size(); i++){
+            if (state[i] <= max_edits){
                 trans.insert(targetWord[i]);
             }
         }
 
-        trans.insert('*');
         return trans;
     }
 };
@@ -114,8 +114,9 @@ public:
 class LevenshteinDFA {
 public:
     int counter;
-    unordered_map<size_t, int> all_states;
+    unordered_map<string, int> all_states;
     vector<Transition> transitions;
+    vector<unordered_map<char, int>> transitionsVector;
     vector<int> matching;
     LevenshteinAutomaton* automaton;
 
@@ -125,10 +126,20 @@ public:
         explore(automaton->start());
     }
 
+    void deleteLev(){
+        delete automaton;
+    }
+
+    string convertVectorToString(vector<int> state){
+        string res;
+        for(int val: state)
+            res += to_string(val) + ", ";
+        return res;
+    }
+
     int explore(vector<int> state){
-        printTransitions();
-        VectorHash hasher;
-        size_t key = hasher(state);
+        // printTransitions();
+        string key = convertVectorToString(state);
 
         if (all_states.find(key) != all_states.end()) {
             return all_states[key];
@@ -137,14 +148,37 @@ public:
         int i = counter;
         counter++;
         all_states[key] = i;
+        transitionsVector.push_back(unordered_map<char, int>());
+
         if (automaton->IsMatch(state)) matching.push_back(i);
-        
+
         for (const char& element : automaton->StateTransitions(state)) {
+            cout << element << endl;
             vector<int> newState = automaton->NextState(element, state);
             int j = explore(newState);
             transitions.push_back(Transition(i, j, element));
+            transitionsVector[i][element] = j;
         }
+        vector<int> newState = automaton->NextState('*', state);
+        int j = explore(newState);
+        transitions.push_back(Transition(i, j, '*'));
+        transitionsVector[i]['*'] = j;
+
         return i;
+    }
+
+    bool isValidWord(string word){
+        int curIndex = 0;
+        for(char c: word){
+            if(transitionsVector[curIndex].find(c) == transitionsVector[curIndex].end()){
+                curIndex = transitionsVector[curIndex]['*'];
+            }
+            else{
+                curIndex = transitionsVector[curIndex][c];
+            }
+        }
+
+        return std::find(matching.begin(), matching.end(), curIndex) != matching.end();
     }
 
     void printMatchingStates(){
@@ -159,19 +193,27 @@ public:
         }
         cout << endl;
     }
+
 };
 
-int main(){
-    string target = "woof";
+// int main(){
+//     string target = "woof";
 
-    LevenshteinDFA levDFA(target,1);
-    cout << levDFA.counter;
-    //levDFA.printStates();
-    /*lev.printRow();
-    for (i = 0; i < input.length(); i++){
-        lev.NextState(input[i]);
-        lev.printRow();
-    }*/
+//     LevenshteinDFA levDFA(target, 1);
+//     // cout << levDFA.counter << endl;
+//     // levDFA.printTransitions();
+//     // levDFA.printMatchingStates();
+//     //levDFA.printStates();
+//     /*lev.printRow();
+//     for (i = 0; i < input.size(); i++){
+//         lev.NextState(input[i]);
+//         lev.printRow();
+//     }*/
+//     cout << levDFA.isValidWord("woo") << endl;
+//     cout << levDFA.isValidWord("woff") << endl;
+//     cout << levDFA.isValidWord("wofff") << endl;
+//     cout << levDFA.isValidWord("aoof") << endl;
 
-    return 0;
-}
+
+//     return 0;
+// }

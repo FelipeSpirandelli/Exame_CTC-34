@@ -13,7 +13,7 @@
 #define TAB 9
 #define ESCAPE 27
 #define DELETE 127
-#define DICTPATH "./american-english" //Mudar pra /usr/share/dict/american-english
+#define DICTPATH "/usr/share/dict/american-english" //Mudar pra /usr/share/dict/american-english
 
 using namespace std;
 using namespace std::chrono;
@@ -70,7 +70,7 @@ public:
     }
     Node* nextNode(Node* cur, char c) {
         if (!cur)
-            cur = head;
+            return cur;
 
         Node* next = cur->find(c);
         return next;
@@ -168,7 +168,7 @@ int main() {
     ifstream file(DICTPATH);
     // ifstream file("./test.txt");
 
-    time_point start = high_resolution_clock::now();
+    auto start = high_resolution_clock::now();
 
     if (file.is_open()) {
         while (getline(file, line)) {
@@ -180,7 +180,7 @@ int main() {
         return 1;
     }
 
-    time_point stop = high_resolution_clock::now();
+    auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     cout << "Time taken to insert words: " << duration.count() << " miliseconds" << endl;
 
