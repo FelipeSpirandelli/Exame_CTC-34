@@ -12,10 +12,11 @@
 #define BACKSPACE 8
 #define TAB 9
 #define DELETE 127
+#define DICTPATH "./american-english" //Mudar pra /usr/share/dict/american-english
 
 using namespace std;
 using namespace std::chrono;
-
+namespace TrieNamespace {
 class Node {
 public:
     bool isEnd;
@@ -34,8 +35,16 @@ public:
     Node* findOrInclude(char c) {
         if (edges.find(c) == edges.end())
             edges[c] = new Node();
-
         return edges[c];
+    }
+    size_t getSize(){
+        size_t size = sizeof(Node);
+        for (const auto& pair : edges){
+            if (pair.second != nullptr){
+                size += sizeof(char) + sizeof(Node*) + pair.second->getSize();
+            }
+        }
+        return size;
     }
 };
 
@@ -53,6 +62,12 @@ public:
         aux->isEnd = true;
     }
 
+    size_t getSize() const {
+        if (head != nullptr){
+            return sizeof(Trie) + head->getSize();
+        }
+        return 0;
+    }
     Node* nextNode(Node* cur, char c) {
         if (!cur)
             cur = head;
@@ -143,12 +158,13 @@ public:
     }
 };
 
+#ifndef EXCLUDE_MAIN
 int main() {
     Trie trie;
     Input input(trie);
 
     string line;
-    ifstream file("/usr/share/dict/american-english");
+    ifstream file(DICTPATH);
     // ifstream file("./test.txt");
 
     time_point start = high_resolution_clock::now();
@@ -168,7 +184,7 @@ int main() {
     cout << "Time taken to insert words: " << duration.count() << " miliseconds" << endl;
 
     int nNodes = trie.countNodes();
-    cout << "Number of nodes: " << nNodes << endl << "Memory: " << ((double) nNodes * sizeof(Node) / 1048576.0)<< " MB" << endl;
+    cout << "Number of nodes: " << nNodes << endl << "Memory: " << (trie.getSize() / 1048576.0)/*((double) nNodes * sizeof(Node) / 1048576.0)*/<< " MB" << endl;
 
     cout << "Press any key to start" << endl;
     getch();
@@ -196,4 +212,6 @@ int main() {
     }
 
     return 0;
+}
+#endif
 }
