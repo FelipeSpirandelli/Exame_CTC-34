@@ -17,7 +17,6 @@
 
 using namespace std;
 using namespace std::chrono;
-namespace TrieNamespace {
 class Node {
 public:
     bool isEnd;
@@ -216,4 +215,3 @@ int main() {
     return 0;
 }
 #endif
-}
