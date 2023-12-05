@@ -24,16 +24,6 @@ public:
     bool isEnd;
     unordered_map<char, Node*> edges;
 
-    size_t getSize(){
-        size_t size = sizeof(Node);
-        for (const auto& pair : edges){
-            if (pair.second != nullptr){
-                size += sizeof(char) + sizeof(Node*) + pair.second->getSize();
-            }
-        }
-        return size;
-    }
-
     Node() {
         isEnd = false;
     }
@@ -63,7 +53,7 @@ public:
     }
 
     bool operator==(const Node& other) const {
-        return (edges == other.edges);
+        return (edges == other.edges) && isEnd == other.isEnd;
     }
 };
 
@@ -119,12 +109,6 @@ public:
 
         Node* next = cur->find(c);
         return next;
-    }
-    size_t getSize() const {
-        if (head != nullptr){
-            return sizeof(Fst) + head->getSize();
-        }
-        return 0;
     }
 
     vector<string> next3Words(Node* cur, string word) {
@@ -194,98 +178,98 @@ public:
 };
 
 #ifndef EXCLUDE_MAIN
-int main(){
-    const int MAX_WORD_SIZE = 100;
+ int main(){
+     const int MAX_WORD_SIZE = 100;
 
-    unordered_set<Node*, hash<Node*>, NodePtrEqual> dictionary;
-    vector<Node*> tempStates(MAX_WORD_SIZE);
-    for(int i = 0; i < MAX_WORD_SIZE; i++)
-        tempStates[i] = new Node();
-    string prevWord = "";
+     unordered_set<Node*, hash<Node*>, NodePtrEqual> dictionary;
+     vector<Node*> tempStates(MAX_WORD_SIZE);
+     for(int i = 0; i < MAX_WORD_SIZE; i++)
+         tempStates[i] = new Node();
+     string prevWord = "";
     
-    string curWord;
-    ifstream file(DICTPATH);
-    // ifstream file("./test.txt");
+     string curWord;
+     ifstream file(DICTPATH);
+     // ifstream file("./test.txt");
 
-    vector<string> all_words;
+     vector<string> all_words;
 
-    // read input
-    if (file.is_open()) {
-        // read each word
-        while (getline(file, curWord)) {
-            all_words.push_back(curWord);
-        }
-    } else {
-        cerr << "Unable to open file" << endl;
-        return 1;
-    }
-    sort(all_words.begin(), all_words.end());
+     // read input
+     if (file.is_open()) {
+         // read each word
+         while (getline(file, curWord)) {
+             all_words.push_back(curWord);
+         }
+     } else {
+         cerr << "Unable to open file" << endl;
+         return 1;
+     }
+     sort(all_words.begin(), all_words.end());
 
-    time_point start = high_resolution_clock::now();
+     auto start = high_resolution_clock::now();
 
-    for(string curWord: all_words){
-        // get prefix size
-        int i = 1;
-        while(i <= curWord.size() && i <= prevWord.size() && curWord[i - 1] == prevWord[i - 1]){
-            i++;
-        }
-        int prefixLengthPlusOne = i;
+     for(string curWord: all_words){
+         // get prefix size
+         int i = 1;
+         while(i <= curWord.size() && i <= prevWord.size() && curWord[i - 1] == prevWord[i - 1]){
+             i++;
+         }
+         int prefixLengthPlusOne = i;
 
-        // minimize states from prefix of prevWord
-        for(i = prevWord.size(); i >= prefixLengthPlusOne; i--){
-            tempStates[i - 1]->setTransition(prevWord[i - 1], findMinimized(tempStates[i], dictionary));
-        }
+         // minimize states from prefix of prevWord
+         for(i = prevWord.size(); i >= prefixLengthPlusOne; i--){
+             tempStates[i - 1]->setTransition(prevWord[i - 1], findMinimized(tempStates[i], dictionary));
+         }
 
-        // tail states for curWord
-        for(int i = prefixLengthPlusOne; i <= curWord.size(); i++){
-            tempStates[i] = new Node();
-            tempStates[i - 1]->setTransition(curWord[i - 1], tempStates[i]);
-        }
+         // tail states for curWord
+         for(int i = prefixLengthPlusOne; i <= curWord.size(); i++){
+             tempStates[i] = new Node();
+             tempStates[i - 1]->setTransition(curWord[i - 1], tempStates[i]);
+         }
 
-        if(curWord != prevWord){
-            tempStates[curWord.size()]->isEnd = true;
-        }
+         if(curWord != prevWord){
+             tempStates[curWord.size()]->isEnd = true;
+         }
 
-        prevWord = curWord;
-    }
-    for(int i = all_words.back().size() - 1; i >= 1; i--){
-        tempStates[i - 1]->setTransition(prevWord[i], findMinimized(tempStates[i], dictionary));
-    }
+         prevWord = curWord;
+     }
+     for(int i = all_words.back().size() - 1; i >= 1; i--){
+         tempStates[i - 1]->setTransition(prevWord[i], findMinimized(tempStates[i], dictionary));
+     }
 
-    time_point stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
+     auto stop = high_resolution_clock::now();
+     auto duration = duration_cast<milliseconds>(stop - start);
 
-    double memory = ((double) dictionary.size() * sizeof(Node) / 1048576.0);
-    cout << "Time taken to create FST: " << duration.count() << " miliseconds" << endl << "Memory: " << memory << " MB" << endl;
+     double memory = ((double) dictionary.size() * sizeof(Node) / 1048576.0);
+     cout << "Time taken to create FST: " << duration.count() << " miliseconds" << endl << "Memory: " << memory << " MB" << endl;
 
-    cout << "Press any key to start" << endl;
-    getch();
+     cout << "Press any key to start" << endl;
+     getch();
 
-    Fst fst(findMinimized(tempStates[0], dictionary));
-    Input input(fst);
-    char input_letter = 0;
+     Fst fst(findMinimized(tempStates[0], dictionary));
+     Input input(fst);
+     char input_letter = 0;
 
-    while (input_letter != ESCAPE) {
-        system("clear");
+     while (input_letter != ESCAPE) {
+         system("clear");
 
-        start = high_resolution_clock::now();
-        vector<string> suggestedWords = input.handleInput(input_letter);
-        stop = high_resolution_clock::now();
+         start = high_resolution_clock::now();
+         vector<string> suggestedWords = input.handleInput(input_letter);
+         stop = high_resolution_clock::now();
 
-        cout << u8"\u2192 " << input.word << endl;
+         cout << u8"\u2192 " << input.word << endl;
 
-        if (input_letter != 0) {
-            // cout << "Avaliable words:" << endl;
-            for (std::basic_string<char>& word : suggestedWords)
-                cout << "  " << word << endl;
+         if (input_letter != 0) {
+             // cout << "Avaliable words:" << endl;
+             for (std::basic_string<char>& word : suggestedWords)
+                 cout << "  " << word << endl;
 
-            auto durationInside = duration_cast<microseconds>(stop - start);
-            cout << endl <<  "Time taken for handleInput: " << durationInside.count() << " microseconds";
-        }
+             auto durationInside = duration_cast<microseconds>(stop - start);
+             cout << endl <<  "Time taken for handleInput: " << durationInside.count() << " microseconds";
+         }
 
-        input_letter = getch();
-    }
+         input_letter = getch();
+     }
 
-    return 0;
+     return 0;
 }
 #endif
