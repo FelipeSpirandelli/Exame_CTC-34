@@ -14,6 +14,7 @@
 #define TAB 9
 #define ESCAPE 27
 #define DELETE 127
+#define DICTPATH "./american-english"
 
 using namespace std;
 using namespace std::chrono;
@@ -22,6 +23,16 @@ class Node {
 public:
     bool isEnd;
     unordered_map<char, Node*> edges;
+
+    size_t getSize(){
+        size_t size = sizeof(Node);
+        for (const auto& pair : edges){
+            if (pair.second != nullptr){
+                size += sizeof(char) + sizeof(Node*) + pair.second->getSize();
+            }
+        }
+        return size;
+    }
 
     Node() {
         isEnd = false;
@@ -109,6 +120,12 @@ public:
         Node* next = cur->find(c);
         return next;
     }
+    size_t getSize() const {
+        if (head != nullptr){
+            return sizeof(Fst) + head->getSize();
+        }
+        return 0;
+    }
 
     vector<string> next3Words(Node* cur, string word) {
         if (cur == nullptr)
@@ -176,7 +193,7 @@ public:
     }
 };
 
-
+#ifndef EXCLUDE_MAIN
 int main(){
     const int MAX_WORD_SIZE = 100;
 
@@ -187,7 +204,7 @@ int main(){
     string prevWord = "";
     
     string curWord;
-    ifstream file("/usr/share/dict/american-english");
+    ifstream file(DICTPATH);
     // ifstream file("./test.txt");
 
     vector<string> all_words;
@@ -271,3 +288,4 @@ int main(){
 
     return 0;
 }
+#endif
