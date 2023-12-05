@@ -12,6 +12,8 @@
 #include <conio.h>
 
 #define BACKSPACE 8
+#define TAB 9
+#define ESCAPE 27
 #define DELETE 127
 
 using namespace std;
@@ -91,7 +93,7 @@ public:
             curRow[i] = min(insertCost, min(deleteCost, replaceCost));
         }
 
-        if(curRow.back() <= maxD && cur->isEnd)
+        if(curRow.back() <= maxD && cur->isEnd && curWord != word)
             ans.push_back(curWord);
 
         if(*min_element(curRow.begin(), curRow.end()) <= maxD){
@@ -138,6 +140,16 @@ public:
             if (!word.empty())
                 return trie.search(word, 1);
         } else {
+            if (c == TAB && !word.empty()) {
+                vector<string> words = trie.search(word, 1);
+
+                if (words.size() == 0)
+                    return {};
+
+                word = words[0];
+
+                return trie.search(word, 1);
+            }
             word.push_back(c);
             return trie.search(word, 1);
         }
@@ -175,7 +187,7 @@ int main() {
     getch();
 
     char input_letter = 0;
-    while (input_letter != '\n') {
+    while (input_letter != ESCAPE) {
         system("clear");
 
         start = high_resolution_clock::now();
